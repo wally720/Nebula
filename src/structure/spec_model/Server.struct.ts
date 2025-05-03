@@ -13,6 +13,7 @@ import { MinecraftVersion } from '../../util/MinecraftVersion.js'
 import { addSchemaToObject, SchemaTypes } from '../../util/SchemaUtil.js'
 import { isValidUrl } from '../../util/StringUtils.js'
 import { FabricResolver } from '../../resolver/fabric/Fabric.resolver.js'
+import { NeoForgeModStructure } from './module/NeoForgeMod.struct.js'
 
 export interface CreateServerResult {
     modContainer?: string
@@ -56,6 +57,7 @@ export class ServerStructure extends BaseModelStructure<Server> {
             version?: string
             forgeVersion?: string
             fabricVersion?: string
+            neoforgeVersion?: string
         }
     ): Promise<CreateServerResult | null> {
         const effectiveId = ServerStructure.getEffectiveId(id, minecraftVersion)
@@ -99,6 +101,20 @@ export class ServerStructure extends BaseModelStructure<Server> {
             await fms.init()
             modContainer = fms.getContainerDirectory()
             serverMetaOpts.fabricVersion = options.fabricVersion
+        }
+
+        if (options.neoforgeVersion != null) {
+            const nfms = new NeoForgeModStructure(
+                absoluteServerRoot,
+                relativeServerRoot,
+                this.baseUrl,
+                minecraftVersion,
+                []
+            )
+
+            await nfms.init()
+            modContainer = nfms.getContainerDirectory()
+            serverMetaOpts.neoforgeVersion = options.neoforgeVersion
         }
 
         const serverMeta: ServerMeta = addSchemaToObject(
