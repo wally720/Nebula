@@ -14,6 +14,7 @@ import { addSchemaToObject, SchemaTypes } from '../../util/SchemaUtil.js'
 import { isValidUrl } from '../../util/StringUtils.js'
 import { FabricResolver } from '../../resolver/fabric/Fabric.resolver.js'
 import { NeoForgeModStructure } from './module/NeoForgeMod.struct.js'
+import { NeoForgeResolver } from '../../resolver/neoforge/NeoForge.resolver.js'
 
 export interface CreateServerResult {
     modContainer?: string
@@ -235,6 +236,21 @@ export class ServerStructure extends BaseModelStructure<Server> {
 
                     const fabricModModules = await fabricModStruct.getSpecModel()
                     modules.push(...fabricModModules)
+                }
+
+                if(serverMeta.neoforge) {
+                    const neoforgeResolver = new NeoForgeResolver(
+                        dirname(this.containerDirectory),
+                        '',
+                        this.baseUrl,
+                        minecraftVersion,
+                        serverMeta.neoforge.version,
+                        this.discardOutput,
+                        this.invalidateCache
+                    )
+
+                    const neoForgeModule = await neoforgeResolver.getModule()
+                    modules.push(neoForgeModule)
                 }
 
                 const libraryStruct = new LibraryStructure(absoluteServerRoot, relativeServerRoot, this.baseUrl, minecraftVersion, untrackedFiles)

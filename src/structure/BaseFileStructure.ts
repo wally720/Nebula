@@ -27,6 +27,9 @@ export abstract class BaseFileStructure implements FileStructure {
         return this.containerDirectory
     }
 
-    public abstract getLoggerName(): string
+    public getRelativeRoot(): string {
+        return this.relativeRoot
+    }
 
+    public abstract getLoggerName(): string
 }
