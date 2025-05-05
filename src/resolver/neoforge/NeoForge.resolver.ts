@@ -26,7 +26,7 @@ interface GeneratedFile {
 
 export class NeoForgeResolver extends BaseResolver {
     private static readonly logger = LoggerUtil.getLogger('NeoForgeResolver')
-    private static readonly WILDCARD_MCP_VERSION = '${mcpVersion}'
+    private static readonly WILDCARD_NEOFORM_VERSION = '${formVersion}'
 
     protected readonly MOJANG_REMOTE_REPOSITORY = 'https://libraries.minecraft.net/'
     protected readonly REMOTE_REPOSITORY = 'https://maven.neoforged.net/'
@@ -61,6 +61,8 @@ export class NeoForgeResolver extends BaseResolver {
     }
 
     private configure(): void {
+        const neoFormUnifiedVersion = `${this.minecraftVersion}-${NeoForgeResolver.WILDCARD_NEOFORM_VERSION}`
+
         this.generatedFiles = [
             {
                 name: 'universal jar',
@@ -75,7 +77,19 @@ export class NeoForgeResolver extends BaseResolver {
                 artifact: LibRepoStructure.NEOFORGE_ARTIFACT,
                 version: this.neoforgeVersion,
                 classifiers: ['client']
+            },
+            {
+                name: 'client srg',
+                group: LibRepoStructure.MINECRAFT_GROUP,
+                artifact: LibRepoStructure.MINECRAFT_CLIENT_ARTIFACT,
+                version: neoFormUnifiedVersion,
+                classifiers: ['srg'],
+                classpath: false
             }
+        ]
+
+        this.wildcardsInUse = [
+            NeoForgeResolver.WILDCARD_NEOFORM_VERSION
         ]
     }
 
@@ -169,6 +183,10 @@ export class NeoForgeResolver extends BaseResolver {
         return join(installerOutputDir, 'versions', versionName, `${versionName}.json`)
     }
 
+    private getVersionJarPath(installerOutputDir: string): string {
+        return join(installerOutputDir, 'versions', this.minecraftVersion.toString(), `${this.minecraftVersion.toString()}.json`)
+    }
+
     private getVersionManifestName(): string {
         return `neoforge-${this.neoforgeVersion}`
     }
@@ -182,7 +200,7 @@ export class NeoForgeResolver extends BaseResolver {
             ], {cwd: dirname(installerPath)})
 
             child.stdout.on('data', (data) => {installerLogger.info(data.toString('utf8').trim())})
-            child.stderr.on('data', (data) => {installerLogger.info(data.toString('utf8').trim())})
+            child.stderr.on('data', (data) => {installerLogger.error(data.toString('utf8').trim())})
 
             child.on('close', code => {
                 if(code === 0) {
@@ -224,18 +242,18 @@ export class NeoForgeResolver extends BaseResolver {
         const libDir = join(installerOutputDir, 'libraries')
 
         if(this.wildcardsInUse) {
-            if(this.wildcardsInUse.includes(NeoForgeResolver.WILDCARD_MCP_VERSION)) {
+            if(this.wildcardsInUse.includes(NeoForgeResolver.WILDCARD_NEOFORM_VERSION)) {
 
-                const mcpVersion = this.getMCPVersion(versionManifest.arguments.game)
+                const mcpVersion = this.getNeoFormVersion(versionManifest.arguments.game)
                 if(mcpVersion == null) {
-                    throw new Error('MCP Version not found.. did NeoForge change their format?')
+                    throw new Error('NeoForm Version not found.. did NeoForge change their format?')
                 }
 
                 this.generatedFiles = this.generatedFiles!.map(f => {
-                    if(f.version.includes(NeoForgeResolver.WILDCARD_MCP_VERSION)) {
+                    if(f.version.includes(NeoForgeResolver.WILDCARD_NEOFORM_VERSION)) {
                         return {
                             ...f,
-                            version: f.version.replace(NeoForgeResolver.WILDCARD_MCP_VERSION, mcpVersion)
+                            version: f.version.replace(NeoForgeResolver.WILDCARD_NEOFORM_VERSION, mcpVersion)
                         }
                     }
                     return f
@@ -318,7 +336,6 @@ export class NeoForgeResolver extends BaseResolver {
     }
 
     private async processLibraries(manifest: VersionManifestNeoForge, installerOutputDir: string): Promise<Module[]> {
-
         const libDir = join(installerOutputDir, 'libraries')
         const libRepo = this.repoStructure.getLibRepoStruct()
 
@@ -370,9 +387,9 @@ export class NeoForgeResolver extends BaseResolver {
 
     }
 
-    private getMCPVersion(args: string[]): string | null {
+    private getNeoFormVersion(args: string[]): string | null {
         for (let i = 0; i < args.length; i++) {
-            if (args[i] === '--fml.mcpVersion') {
+            if (args[i] === '--fml.neoFormVersion') {
                 return args[i + 1]
             }
         }
