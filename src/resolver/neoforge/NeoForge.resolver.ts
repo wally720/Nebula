@@ -28,7 +28,6 @@ export class NeoForgeResolver extends BaseResolver {
     private static readonly logger = LoggerUtil.getLogger('NeoForgeResolver')
     private static readonly WILDCARD_NEOFORM_VERSION = '${formVersion}'
 
-    protected readonly MOJANG_REMOTE_REPOSITORY = 'https://libraries.minecraft.net/'
     protected readonly REMOTE_REPOSITORY = 'https://maven.neoforged.net/'
 
     protected repoStructure: RepoStructure
@@ -70,13 +69,31 @@ export class NeoForgeResolver extends BaseResolver {
                 artifact: LibRepoStructure.NEOFORGE_ARTIFACT,
                 version: this.neoforgeVersion,
                 classifiers: ['universal'],
+                classpath: false
             },
             {
                 name: 'client jar',
                 group: LibRepoStructure.NEOFORGE_GROUP,
                 artifact: LibRepoStructure.NEOFORGE_ARTIFACT,
                 version: this.neoforgeVersion,
-                classifiers: ['client']
+                classifiers: ['client'],
+                classpath: false
+            },
+            {
+                name: 'client extra',
+                group: LibRepoStructure.MINECRAFT_GROUP,
+                artifact: LibRepoStructure.MINECRAFT_CLIENT_ARTIFACT,
+                version: neoFormUnifiedVersion,
+                classifiers: ['extra'],
+                classpath: false
+            },
+            {
+                name: 'client slim',
+                group: LibRepoStructure.MINECRAFT_GROUP,
+                artifact: LibRepoStructure.MINECRAFT_CLIENT_ARTIFACT,
+                version: neoFormUnifiedVersion,
+                classifiers: ['slim'],
+                classpath: false
             },
             {
                 name: 'client srg',
@@ -181,10 +198,6 @@ export class NeoForgeResolver extends BaseResolver {
     private getVersionManifestPath(installerOutputDir: string): string {
         const versionName = this.getVersionManifestName()
         return join(installerOutputDir, 'versions', versionName, `${versionName}.json`)
-    }
-
-    private getVersionJarPath(installerOutputDir: string): string {
-        return join(installerOutputDir, 'versions', this.minecraftVersion.toString(), `${this.minecraftVersion.toString()}.json`)
     }
 
     private getVersionManifestName(): string {
