@@ -143,6 +143,10 @@ Options:
   * OPTIONAL (default: null)
   * If not provided fabric will not be enabled.
   * You can provide either `latest` or `recommended` to use the latest/recommended version of fabric.
+* `--neoforge <string>` Specify NeoForge version. This is WITHOUT the minecraft version (ex. 21.1.169)
+  * OPTIONAL (default: null)
+  * If not provided NeoForge will not be enabled.
+  * You can provide either `latest` or `recommended` to use the latest/recommended version of NeoForge.
 
 > [!NOTE]  
 > Forge and fabric cannot be used together on the same server. This command will fail if both are provided.
