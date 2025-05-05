@@ -251,6 +251,17 @@ export class ServerStructure extends BaseModelStructure<Server> {
 
                     const neoForgeModule = await neoforgeResolver.getModule()
                     modules.push(neoForgeModule)
+
+                    const neoforgeModStruct = new NeoForgeModStructure(
+                        absoluteServerRoot,
+                        relativeServerRoot,
+                        this.baseUrl,
+                        minecraftVersion,
+                        untrackedFiles
+                    )
+
+                    const neoforgeModModules = await neoforgeModStruct.getSpecModel()
+                    modules.push(...neoforgeModModules)
                 }
 
                 const libraryStruct = new LibraryStructure(absoluteServerRoot, relativeServerRoot, this.baseUrl, minecraftVersion, untrackedFiles)

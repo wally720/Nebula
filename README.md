@@ -1,3 +1,35 @@
+> [!IMPORTANT]
+> If you plan to use this please read the next part carefully.
+## Important Note
+Use this fork of [Nebula](https://github.com/dscalzi/Nebula) at your own risk.
+
+This implementation adds [NeoForge](https://neoforged.net/) support to [Nebula](https://github.com/dscalzi/Nebula), 
+but it is somewhat hacky and dirty. This is one of the main reasons why I am not submitting a pull request to merge it into the upstream [Nebula](https://github.com/dscalzi/Nebula).
+
+If you’re interested in bringing [NeoForge](https://neoforged.net/) support to upstream Nebula, feel free to use any part of this code. 
+**Credit is appreciated but not required.**
+
+This project is not endorsed by the official creators/contributors for 
+[HeliosLauncher](https://github.com/dscalzi/HeliosLauncher) and [Nebula](https://github.com/dscalzi/Nebula).
+
+Use at your own risk — things may break!
+
+
+> [!WARNING]  
+> This fork requires a change to the launcher.
+
+Replace line 843 in ``app/assets/js/processbuilder.js``:
+````javascript
+libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
+````
+Replace it with:
+````javascript
+if (mdl.rawModule.classpath !== false)
+  libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
+````
+This change ensures that the NeoForge ModLoader module is **excluded** from the game’s classpath.
+Including it causes the game to **crash at startup**.
+
 # Nebula
 
 Generate a distribution.json for Helios. Documentation on this format can be found [here][distro.md].
