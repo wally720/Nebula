@@ -280,15 +280,25 @@ const generateServerCurseForgeCommand: CommandModule = {
         // TODO Support fabric
         const forgeModLoader = modpackManifest.minecraft.modLoaders.find(({ id }) => id.toLowerCase().startsWith('forge-'))
         const forgeVersion = forgeModLoader != null ? forgeModLoader.id.substring('forge-'.length) : undefined
-        logger.debug(`Forge version set to ${forgeVersion}`)
+
+        const neoforgeModLoader = modpackManifest.minecraft.modLoaders.find(({ id }) => id.toLowerCase().startsWith('neoforge-'))
+        const neoforgeVersion = neoforgeModLoader != null ? neoforgeModLoader.id.substring('neoforge-'.length) : undefined
+
+        if (forgeModLoader)
+            logger.debug(`Forge version set to ${forgeVersion}`)
+        if (neoforgeModLoader)
+            logger.debug(`NeoForge version set to ${neoforgeVersion}`)
 
         const serverStruct = new ServerStructure(argv.root as string, getBaseURL(), false, false)
+
+
         const createServerResult = await serverStruct.createServer(
             argv.id as string,
             minecraftVersion,
             {
                 version: modpackManifest.version,
-                forgeVersion
+                forgeVersion: forgeVersion,
+                neoforgeVersion: neoforgeVersion
             }
         )
 
