@@ -1,3 +1,41 @@
+> [!IMPORTANT]
+> This fork adds [NeoForge](https://neoforged.net/) support to
+> [Nebula](https://github.com/dscalzi/Nebula). **It requires a small change to your launcher —
+> see below.** Use at your own risk; this is not endorsed by the authors of
+> [HeliosLauncher](https://github.com/dscalzi/HeliosLauncher) or
+> [Nebula](https://github.com/dscalzi/Nebula).
+
+## NeoForge support
+
+The NeoForge resolver is ported from [`BelgianDev/NeoNebula`](https://github.com/BelgianDev/NeoNebula)
+by RaftDev (MIT), with fixes applied on top. Design notes, the porting record and an audit of
+the ported code live in [`sdd/`](sdd/).
+
+> [!WARNING]
+> **Your launcher needs a three-line change, or NeoForge servers will not start.**
+
+In `app/assets/js/processbuilder.js`, inside `_resolveServerLibraries()`, replace:
+
+````javascript
+libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
+````
+
+with:
+
+````javascript
+if (mdl.rawModule.classpath !== false)
+  libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
+````
+
+The launcher adds a server's **root** module to the classpath without checking its `classpath`
+flag — it only honours the flag on submodules. NeoForge's universal jar is the root module here,
+and putting it on the classpath duplicates it against the module path, so the game crashes at
+startup. This change makes the root module respect the flag too.
+
+Nothing else is needed: no NeoForge-specific launcher code, and no new `helios-core` version.
+Remember to re-apply it whenever you rebase your launcher on HeliosLauncher upstream. Full
+rationale and verification in [`sdd/06-parche-launcher.md`](sdd/06-parche-launcher.md).
+
 # Nebula
 
 Generate a distribution.json for Helios. Documentation on this format can be found [here][distro.md].
@@ -111,6 +149,10 @@ Options:
   * OPTIONAL (default: null)
   * If not provided fabric will not be enabled.
   * You can provide either `latest` or `recommended` to use the latest/recommended version of fabric.
+* `--neoforge <string>` Specify NeoForge version. This is WITHOUT the minecraft version (ex. 21.1.169)
+  * OPTIONAL (default: null)
+  * If not provided NeoForge will not be enabled.
+  * You can provide either `latest` or `recommended` to use the latest/recommended version of NeoForge.
 
 > [!NOTE]  
 > Forge and fabric cannot be used together on the same server. This command will fail if both are provided.

@@ -3,6 +3,7 @@ import { PromotionsSlim } from '../model/forge/PromotionsSlim.js'
 import { MinecraftVersion } from './MinecraftVersion.js'
 import { LoggerUtil } from './LoggerUtil.js'
 import { FabricInstallerMeta, FabricLoaderMeta, FabricProfileJson, FabricVersionMeta } from '../model/fabric/FabricMeta.js'
+import { NeoForgeVersionIndex } from '../model/neoforge/NeoForgeVersionIndex.js'
 
 export class VersionUtil {
 
@@ -71,6 +72,15 @@ export class VersionUtil {
         return response.body
     }
 
+    public static async getNeoForgeVersionIndex(): Promise<NeoForgeVersionIndex> {
+        const response = await got.get<NeoForgeVersionIndex>({
+            method: 'get',
+            url: 'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge',
+            responseType: 'json'
+        })
+        return response.body
+    }
+
     public static getPromotedVersionStrict(index: PromotionsSlim, minecraftVersion: MinecraftVersion, promotion: string): string {
         const workingPromotion = promotion.toLowerCase()
         return index.promos[`${minecraftVersion}-${workingPromotion}`]
@@ -89,6 +99,59 @@ export class VersionUtil {
             }
         }
         return version
+    }
+
+    // -------------------------------
+    // NeoForge
+
+    public static async getPromotedNeoForgeVersion(minecraftVersion: MinecraftVersion, promotion: string): Promise<string> {
+        const stable = promotion.toLowerCase() === 'recommended'
+        const index = await VersionUtil.getNeoForgeVersionIndex()
+
+        let version: string | undefined = VersionUtil.findNeoForgePromotedVersion(index, stable, minecraftVersion)
+        if (version == null) {
+            VersionUtil.logger.warn(`No ${promotion.toLowerCase()} version found for NeoForge ${minecraftVersion}.`)
+            VersionUtil.logger.warn('Attempting to pull latest version instead.')
+            version = VersionUtil.findNeoForgePromotedVersion(index, false, minecraftVersion)
+            if (version == null) {
+                throw new Error(`No latest version found for NeoForge ${minecraftVersion}.`)
+            }
+        }
+
+        return version
+    }
+
+    public static findNeoForgePromotedVersion(index: NeoForgeVersionIndex, stable: boolean, workingVersion: MinecraftVersion): string | undefined {
+        let latestAvailable: string | undefined
+
+        const minecraftMinor = workingVersion.getMinor()
+        const minecraftPatch = workingVersion.getRevision() ?? 0
+
+        // The API happens to return versions in ascending order today, but that is not
+        // documented anywhere. Sort by patch number so the last entry is always the newest,
+        // rather than depending on the response's order.
+        index.versions.filter(version => {
+            const vSplit = version.split('.')
+            if (vSplit.length < 2) return false
+
+            const neoMajor = parseInt(vSplit[0])
+            const neoMinor = parseInt(vSplit[1])
+            return neoMajor === minecraftMinor && neoMinor === minecraftPatch
+        }).sort((a, b) => {
+            const patchOf = (v: string): number => parseInt(v.split('.')[2] ?? '0') || 0
+            return patchOf(a) - patchOf(b)
+        }).forEach(version => {
+            if (stable) {
+                if (!version.endsWith('-beta'))
+                    latestAvailable = version
+
+                return
+            }
+
+            latestAvailable = version
+        })
+
+        return latestAvailable
     }
 
     // -------------------------------

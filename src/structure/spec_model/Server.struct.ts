@@ -13,6 +13,8 @@ import { MinecraftVersion } from '../../util/MinecraftVersion.js'
 import { addSchemaToObject, SchemaTypes } from '../../util/SchemaUtil.js'
 import { isValidUrl } from '../../util/StringUtils.js'
 import { FabricResolver } from '../../resolver/fabric/Fabric.resolver.js'
+import { NeoForgeModStructure } from './module/NeoForgeMod.struct.js'
+import { NeoForgeResolver } from '../../resolver/neoforge/NeoForge.resolver.js'
 
 export interface CreateServerResult {
     modContainer?: string
@@ -21,6 +23,11 @@ export interface CreateServerResult {
 }
 
 export class ServerStructure extends BaseModelStructure<Server> {
+
+    // Minimum Minecraft version accepted for NeoForge servers. NeoForge itself goes back to
+    // 1.20.2, so this floor is a deliberate project decision, not a NeoForge limitation --
+    // lower it here if older versions are ever needed.
+    private static readonly MINIMUM_NEOFORGE_MINECRAFT_VERSION = new MinecraftVersion('1.20.4')
 
     private readonly ID_REGEX = /(.+-(.+)$)/
     private readonly SERVER_META_FILE = 'servermeta.json'
@@ -56,6 +63,7 @@ export class ServerStructure extends BaseModelStructure<Server> {
             version?: string
             forgeVersion?: string
             fabricVersion?: string
+            neoforgeVersion?: string
         }
     ): Promise<CreateServerResult | null> {
         const effectiveId = ServerStructure.getEffectiveId(id, minecraftVersion)
@@ -99,6 +107,20 @@ export class ServerStructure extends BaseModelStructure<Server> {
             await fms.init()
             modContainer = fms.getContainerDirectory()
             serverMetaOpts.fabricVersion = options.fabricVersion
+        }
+
+        if (options.neoforgeVersion != null) {
+            const nfms = new NeoForgeModStructure(
+                absoluteServerRoot,
+                relativeServerRoot,
+                this.baseUrl,
+                minecraftVersion,
+                []
+            )
+
+            await nfms.init()
+            modContainer = nfms.getContainerDirectory()
+            serverMetaOpts.neoforgeVersion = options.neoforgeVersion
         }
 
         const serverMeta: ServerMeta = addSchemaToObject(
@@ -219,6 +241,39 @@ export class ServerStructure extends BaseModelStructure<Server> {
 
                     const fabricModModules = await fabricModStruct.getSpecModel()
                     modules.push(...fabricModModules)
+                }
+
+                if(serverMeta.neoforge) {
+                    if(!minecraftVersion.isGreaterThanOrEqualTo(ServerStructure.MINIMUM_NEOFORGE_MINECRAFT_VERSION)) {
+                        throw new Error(
+                            `NeoForge is not supported on Minecraft ${minecraftVersion} (server ${serverMeta.meta.name}). `
+                            + `The minimum supported version is ${ServerStructure.MINIMUM_NEOFORGE_MINECRAFT_VERSION}.`
+                        )
+                    }
+
+                    const neoforgeResolver = new NeoForgeResolver(
+                        dirname(this.containerDirectory),
+                        '',
+                        this.baseUrl,
+                        minecraftVersion,
+                        serverMeta.neoforge.version,
+                        this.discardOutput,
+                        this.invalidateCache
+                    )
+
+                    const neoForgeModule = await neoforgeResolver.getModule()
+                    modules.push(neoForgeModule)
+
+                    const neoforgeModStruct = new NeoForgeModStructure(
+                        absoluteServerRoot,
+                        relativeServerRoot,
+                        this.baseUrl,
+                        minecraftVersion,
+                        untrackedFiles
+                    )
+
+                    const neoforgeModModules = await neoforgeModStruct.getSpecModel()
+                    modules.push(...neoforgeModModules)
                 }
 
                 const libraryStruct = new LibraryStructure(absoluteServerRoot, relativeServerRoot, this.baseUrl, minecraftVersion, untrackedFiles)

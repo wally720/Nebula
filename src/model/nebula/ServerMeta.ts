@@ -16,6 +16,7 @@ export interface ServerMetaOptions {
     version?: string
     forgeVersion?: string
     fabricVersion?: string
+    neoforgeVersion?: string
 }
 
 export function getDefaultServerMeta(id: string, version: string, options?: ServerMetaOptions): ServerMeta {
@@ -48,6 +49,18 @@ export function getDefaultServerMeta(id: string, version: string, options?: Serv
         servMeta.meta.description = `${servMeta.meta.description} (Fabric v${options.fabricVersion})`
         servMeta.fabric = {
             version: options.fabricVersion
+        }
+    }
+
+    if(options?.neoforgeVersion) {
+        servMeta.meta.description = `${servMeta.meta.description} (NeoForge v${options.neoforgeVersion})`
+        servMeta.neoforge = {
+            version: options.neoforgeVersion
+        }
+        // NeoForge 21.1+ requires Java 21. Declare it so the launcher provisions
+        // the right JDK instead of failing at launch.
+        servMeta.meta.javaOptions = {
+            suggestedMajor: 21
         }
     }
 
@@ -92,6 +105,17 @@ export interface ServerMeta {
         /**
          * The fabric loader version. This does NOT include the minecraft version.
          * Ex. 0.14.18
+         */
+        version: string
+    }
+
+    /**
+     * Properties related to NeoForge.
+     */
+    neoforge?: {
+        /**
+         * The neoforge version. This does NOT include the minecraft version.
+         * Ex. 21.1.169
          */
         version: string
     }
