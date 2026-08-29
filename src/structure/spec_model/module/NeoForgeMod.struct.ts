@@ -36,11 +36,20 @@ export class NeoForgeModStructure extends BaseForgeModStructure<ModsToml> {
     }
 
     protected processZip(zip: StreamZip, name: string, path: string): ModsToml {
+        // NeoForge still accepts the legacy META-INF/mods.toml location, and many
+        // 1.21.1 mods have yet to migrate. Fall back to it before giving up.
+        const candidates = ['META-INF/neoforge.mods.toml', 'META-INF/mods.toml']
+
         let raw: Buffer | undefined
-        try {
-            raw = zip.entryDataSync('META-INF/neoforge.mods.toml')
-        } catch(err) {
-            // ignored
+        let rawEntry: string | undefined
+        for (const candidate of candidates) {
+            try {
+                raw = zip.entryDataSync(candidate)
+                rawEntry = candidate
+                break
+            } catch(err) {
+                // ignored, try the next candidate
+            }
         }
 
         if (raw) {
@@ -48,10 +57,10 @@ export class NeoForgeModStructure extends BaseForgeModStructure<ModsToml> {
                 const parsed = toml.parse(raw.toString()) as ModsToml
                 this.modMetadata[name] = parsed
             } catch (err) {
-                this.logger.error(`NeoForgeNeoMod ${name} contains an invalid neoforge.mods.toml file.`)
+                this.logger.error(`NeoForgeMod ${name} contains an invalid ${rawEntry} file.`)
             }
         } else {
-            this.logger.error(`NeoForgeMod ${name} does not contain neoforge.mods.toml file.`)
+            this.logger.error(`NeoForgeMod ${name} does not contain a ${candidates.join(' or ')} file.`)
         }
 
         const cRes = this.claritasResult?.[path]

@@ -28,7 +28,7 @@ export class NeoForgeResolver extends BaseResolver {
     private static readonly logger = LoggerUtil.getLogger('NeoForgeResolver')
     private static readonly WILDCARD_NEOFORM_VERSION = '${formVersion}'
 
-    protected readonly REMOTE_REPOSITORY = 'https://maven.neoforged.net/'
+    protected readonly REMOTE_REPOSITORY = 'https://maven.neoforged.net/releases/'
 
     protected repoStructure: RepoStructure
     private generatedFiles: GeneratedFile[] | undefined
@@ -206,7 +206,7 @@ export class NeoForgeResolver extends BaseResolver {
 
     // Modified installer method from ForgeGradle3Adapter, that doesn't require user interaction.
     private runInstaller(installerPath: string, outputDir: string): Promise<void> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const installerLogger = LoggerUtil.getLogger('NeoForge Installer')
             const child = spawn(JavaUtil.getJavaExecutable(), [
                 '-jar', installerPath, '--installClient', outputDir
@@ -215,14 +215,19 @@ export class NeoForgeResolver extends BaseResolver {
             child.stdout.on('data', (data) => {installerLogger.info(data.toString('utf8').trim())})
             child.stderr.on('data', (data) => {installerLogger.error(data.toString('utf8').trim())})
 
+            child.on('error', err => {
+                installerLogger.error('Failed to spawn the installer.', err)
+                reject(err)
+            })
+
             child.on('close', code => {
                 if(code === 0) {
                     installerLogger.info('Installer exited with code', code)
+                    resolve()
                 } else {
                     installerLogger.error('Installer exited with code', code)
+                    reject(new Error(`NeoForge installer exited with code ${code}.`))
                 }
-
-                resolve()
             })
         })
     }

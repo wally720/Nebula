@@ -57,6 +57,11 @@ export function getDefaultServerMeta(id: string, version: string, options?: Serv
         servMeta.neoforge = {
             version: options.neoforgeVersion
         }
+        // NeoForge 21.1+ requires Java 21. Declare it so the launcher provisions
+        // the right JDK instead of failing at launch.
+        servMeta.meta.javaOptions = {
+            suggestedMajor: 21
+        }
     }
 
     // Add empty untracked files.

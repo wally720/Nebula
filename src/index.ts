@@ -185,6 +185,8 @@ const generateServerCommand: CommandModule = {
                 type: 'string'
             })
             .conflicts('forge', 'fabric')
+            .conflicts('neoforge', 'forge')
+            .conflicts('neoforge', 'fabric')
     },
     handler: async (argv) => {
         argv.root = getRoot()
@@ -420,6 +422,18 @@ const latestForgeCommand: CommandModule = {
     }
 }
 
+const latestNeoForgeCommand: CommandModule = {
+    command: 'latest-neoforge <version>',
+    describe: 'Get the latest version of NeoForge.',
+    handler: async (argv) => {
+        logger.debug(`Invoked latest-neoforge with version ${argv.version}.`)
+
+        const minecraftVersion = new MinecraftVersion(argv.version as string)
+        const neoForgeVer = await VersionUtil.getPromotedNeoForgeVersion(minecraftVersion, 'latest')
+        logger.info(`Latest version: NeoForge ${neoForgeVer} (${argv.version})`)
+    }
+}
+
 const recommendedForgeCommand: CommandModule = {
     command: 'recommended-forge <version>',
     describe: 'Get the recommended version of forge. Returns latest if there is no recommended build.',
@@ -472,6 +486,7 @@ await yargs(hideBin(process.argv))
     .command(generateCommand)
     .command(validateCommand)
     .command(latestForgeCommand)
+    .command(latestNeoForgeCommand)
     .command(recommendedForgeCommand)
     .command(testCommand)
     .demandCommand()
