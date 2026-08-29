@@ -6,6 +6,12 @@ ser cuestión de ampliar `isForVersion`.
 
 Todo lo que sigue va en este repositorio (Nebula). El launcher no se toca.
 
+> **Cómo leer este documento.** Se escribió antes de descubrir que `BelgianDev/NeoNebula` ya
+> tiene una implementación funcional. **No es una guía para escribir el resolver** — para eso
+> se portan sus commits, ver `04-implementacion-existente.md`. Sirve como mapa de qué hace cada
+> pieza y por qué, útil para revisar el código portado y para depurar. Su §2 sobre resolución
+> de versiones quedó obsoleta y está marcada como tal.
+
 ---
 
 ## 1. `src/resolver/neoforge/NeoForge.resolver.ts`

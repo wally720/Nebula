@@ -22,7 +22,9 @@ Forge 1.20.3+ (ver hallazgo 3).
 | `helios-distribution-types@1.3.0` no tiene `Type.NeoForge` | `build/spec/type.js`: solo `Forge`, `ForgeHosted`, `Fabric`, y sus tipos de mod |
 | Nebula no soporta NeoForge | README oficial y ausencia de resolver |
 
-No hay nada que "activar". Hay que construirlo.
+No hay nada que "activar" en el stack oficial. Hay que construirlo — aunque, como se descubrió
+después, **ya está construido en un fork de Nebula**: ver `04-implementacion-existente.md`. Los
+hallazgos de este documento siguen siendo la base para revisar y corregir ese código.
 
 ## 2. El launcher ya es compatible — no requiere cambios
 
@@ -188,5 +190,5 @@ tiene 242 versiones publicadas.
 | Componente | Trabajo |
 |---|---|
 | MCSquad Launcher | **Ninguno** |
-| Nebula | Un resolver nuevo + plomería. Ver `02-especificacion.md`. |
+| Nebula | Un resolver de NeoForge + plomería. **Ya existe implementado** en `BelgianDev/NeoNebula`: se porta, no se reescribe. Ver `04-implementacion-existente.md`. |
 | Operación | Re-subir los jars parcheados en cada actualización de NeoForge |
