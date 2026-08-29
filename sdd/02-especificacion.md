@@ -4,7 +4,8 @@ Alcance de esta entrega: **NeoForge 21.1.x sobre Minecraft 1.21.1**. La mecánic
 desde NeoForge 20.2 (BootstrapLauncher + FancyModLoader), así que extenderlo después debería
 ser cuestión de ampliar `isForVersion`.
 
-Todo lo que sigue va en este repositorio (Nebula). El launcher no se toca.
+Todo lo que sigue va en este repositorio (Nebula). El launcher necesita además una guarda de
+tres líneas, documentada aparte en [`06-parche-launcher.md`](06-parche-launcher.md).
 
 > **Cómo leer este documento.** Se escribió antes de descubrir que `BelgianDev/NeoNebula` ya
 > tiene una implementación funcional. **No es una guía para escribir el resolver** — para eso
@@ -53,7 +54,13 @@ línea 876). Por eso el universal va primero.
 
 Todos con `classpath: false`, siguiendo el bloque de Forge 1.13-1.20.2 de
 `ForgeGradle3.resolver.ts` (líneas 121-180 y 240-290) — el análogo estructural correcto, mismo
-stack BootstrapLauncher/modlauncher. En el universal la bandera es cosmética por ser raíz.
+stack BootstrapLauncher/modlauncher.
+
+> **Corregido.** Aquí se afirmaba que en el universal la bandera era «cosmética por ser raíz».
+> Es al revés: por ser raíz la bandera **se ignora**, el universal entra al classpath y el
+> juego no arranca. Por eso el launcher necesita el parche de
+> [`06-parche-launcher.md`](06-parche-launcher.md). El orden que describe este apartado
+> (universal primero) es correcto y se mantiene; lo que era falso es que saliera gratis.
 
 Razón de fondo: NeoForge resuelve estos artefactos por `-DlibraryDirectory` vía
 `LibraryFinder.findPathForMaven`, no por el classpath.

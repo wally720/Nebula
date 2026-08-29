@@ -34,7 +34,11 @@ Detallados en `04-implementacion-existente.md`:
 
 ## Paso 3 — Launcher
 
-**Sin cambios de código.** Solo confirmar en pruebas.
+**Un cambio de tres líneas en `app/assets/js/processbuilder.js`**, obligatorio: sin él el juego
+no arranca. Está detallado, con su origen y su verificación, en
+[`06-parche-launcher.md`](06-parche-launcher.md).
+
+No hace falta tocar `helios-core` ni actualizarlo: `~2.3.0` sirve tal cual.
 
 ---
 

@@ -26,7 +26,12 @@ No hay nada que "activar" en el stack oficial. Hay que construirlo — aunque, c
 después, **ya está construido en un fork de Nebula**: ver `04-implementacion-existente.md`. Los
 hallazgos de este documento siguen siendo la base para revisar y corregir ese código.
 
-## 2. El launcher ya es compatible — no requiere cambios
+## 2. El launcher es compatible salvo por una línea
+
+> **Corregido tras la auditoría.** Este apartado afirmaba que el launcher no requería ningún
+> cambio. Todo lo que se lista debajo sigue siendo cierto y verificado, pero **falta un
+> cambio de tres líneas en `processbuilder.js`**: ver el hallazgo 8 y
+> [`06-parche-launcher.md`](06-parche-launcher.md).
 
 `version.json` de NeoForge 21.1.248 (extraído del instalador, ver `evidencia/`):
 
@@ -44,7 +49,8 @@ Además:
   devuelve `true` inmediatamente para MC ≥ 1.13 **sin parsear la versión del loader**. Un
   módulo `ForgeHosted` con NeoForge cae por el camino de Forge moderno automáticamente.
 - El formato de distribución ya soporta `classpath: false` (`processbuilder.js:876`), para
-  bajar un artefacto sin meterlo al classpath.
+  bajar un artefacto sin meterlo al classpath. **Pero solo en submódulos** — esa es la
+  excepción del hallazgo 8.
 - `classpathArg()` (`processbuilder.js:678`) ya excluye el jar de versión para MC ≥ 1.17 con
   loader no-Fabric, que es lo correcto para NeoForge.
 
@@ -183,12 +189,45 @@ generaría el `distribution.json` sin error aparente.
 NeoForge tampoco tiene el concepto `recommended`; solo listado de versiones. La serie 21.1.x
 tiene 242 versiones publicadas.
 
+## 8. El módulo raíz ignora `classpath: false` — y eso obliga a tocar el launcher
+
+Este hallazgo es de la auditoría, posterior a la investigación original, y corrige el
+apartado 2.
+
+En `_resolveServerLibraries()` de `processbuilder.js`, el launcher recorre los módulos raíz de
+un servidor y los mete al classpath **sin mirar su bandera `classpath`**:
+
+```js
+if(type === Type.ForgeHosted || type === Type.Fabric || type === Type.Library){
+    libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()   // ← sin condición
+```
+
+La bandera solo se respeta en `_resolveModuleLibraries()`, que trata **submódulos**
+(`sm.rawModule.classpath ?? true`, línea 878). Verificado en el código de
+`dscalzi/HeliosLauncher` a día de hoy.
+
+Como el diseño pone el universal de NeoForge de módulo raíz, acaba en el classpath pase lo que
+pase. Y ahí rompe: el `version.json` de 21.1.248 declara
+`-DignoreList=client-extra,${version_name}.jar`, que **no** incluye al universal, y el universal
+**no** está entre las 47 librerías. BootstrapLauncher lo ve entonces duplicado respecto al
+module path y el juego no arranca.
+
+### Por qué con Forge no pasa
+
+Para Forge 1.17+, `ForgeGradle3.resolver.ts` hace `unshift` de `fmlcore`, `javafmllanguage`,
+`mclanguage` y `lowcodelanguage` **sin** `classpath: false`. La raíz acaba siendo `fmlcore`,
+un jar que legítimamente va al classpath, y el universal queda de submódulo, donde la bandera
+sí se respeta. NeoForge no tiene equivalentes de esos artefactos: se fusionaron en el propio
+`neoforge`, así que la raíz solo puede ser el universal.
+
+De ahí el parche: ver [`06-parche-launcher.md`](06-parche-launcher.md).
+
 ---
 
 ## Veredicto
 
 | Componente | Trabajo |
 |---|---|
-| MCSquad Launcher | **Ninguno** |
+| MCSquad Launcher | **Tres líneas** en `processbuilder.js` (hallazgo 8). Sin cambios en `helios-core`. |
 | Nebula | Un resolver de NeoForge + plomería. **Ya existe implementado** en `BelgianDev/NeoNebula`: se porta, no se reescribe. Ver `04-implementacion-existente.md`. |
 | Operación | Re-subir los jars parcheados en cada actualización de NeoForge |

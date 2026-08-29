@@ -3,8 +3,15 @@
 Documentación de diseño para agregar **NeoForge ≥ 21.1.248 (Minecraft 1.21.1)** al
 ecosistema MCSquad.
 
-**Conclusión de la investigación: el launcher (MCSquad Launcher) no requiere cambios. Todo el
-trabajo está en este repositorio, Nebula**, el generador del `distribution.json`.
+**Conclusión: casi todo el trabajo está en este repositorio, Nebula**, el generador del
+`distribution.json`. El launcher necesita **un solo cambio de tres líneas**, y ninguna versión
+nueva de `helios-core`.
+
+> **Corrección (auditoría posterior).** La primera versión de este SDD afirmaba que el launcher
+> no requería cambio alguno. **Era incorrecto.** El módulo raíz de un servidor va al classpath
+> ignorando su bandera `classpath: false`, y el universal de NeoForge en el classpath rompe el
+> arranque del juego. Hace falta la guarda de `processbuilder.js` descrita en
+> [`06-parche-launcher.md`](06-parche-launcher.md). El resto de la conclusión se mantiene.
 
 > **Hallazgo posterior:** el resolver **no hay que escribirlo desde cero**. El fork
 > `BelgianDev/NeoNebula` ya tiene una implementación completa de NeoForge (760 líneas, MIT) que
@@ -21,6 +28,8 @@ trabajo está en este repositorio, Nebula**, el generador del `distribution.json
 | [`03-plan-implementacion.md`](03-plan-implementacion.md) | Pasos, verificación y puntos abiertos. |
 | [`04-implementacion-existente.md`](04-implementacion-existente.md) | **Ya existe una implementación funcional en otro fork.** Léelo antes de escribir código. |
 | [`05-verificacion.md`](05-verificacion.md) | Resultado de la implementación y las pruebas ejecutadas. |
+| [`06-parche-launcher.md`](06-parche-launcher.md) | **El cambio que sí hay que hacer en el launcher.** Obligatorio. |
+| [`07-auditoria.md`](07-auditoria.md) | Auditoría del código portado: 7 fallos, su estado y su evidencia. |
 | [`evidencia/`](evidencia/) | Artefactos reales extraídos del instalador de NeoForge 21.1.248. |
 
 ## Estado
@@ -29,7 +38,10 @@ trabajo está en este repositorio, Nebula**, el generador del `distribution.json
 - [x] Fork creado
 - [x] Implementación (9 commits portados desde `BelgianDev/NeoNebula` + 5 correcciones)
 - [x] Pruebas de generación de punta a punta (`generate distro` con NeoForge 21.1.248)
-- [ ] Prueba de carga de mods in-game — **pendiente, requiere el launcher**
+- [x] Parche del launcher identificado y verificado (ver [`06-parche-launcher.md`](06-parche-launcher.md))
+- [x] Auditoría del código portado (ver [`07-auditoria.md`](07-auditoria.md))
+- [ ] Aplicar el parche a MCSquad Launcher
+- [ ] Prueba de carga de mods in-game — **pendiente, requiere el launcher parcheado**
 
 Ver [`05-verificacion.md`](05-verificacion.md) para el resultado de las pruebas y lo que
 queda sin verificar.

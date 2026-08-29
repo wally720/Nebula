@@ -1,34 +1,40 @@
 > [!IMPORTANT]
-> If you plan to use this please read the next part carefully.
-## Important Note
-Use this fork of [Nebula](https://github.com/dscalzi/Nebula) at your own risk.
+> This fork adds [NeoForge](https://neoforged.net/) support to
+> [Nebula](https://github.com/dscalzi/Nebula). **It requires a small change to your launcher —
+> see below.** Use at your own risk; this is not endorsed by the authors of
+> [HeliosLauncher](https://github.com/dscalzi/HeliosLauncher) or
+> [Nebula](https://github.com/dscalzi/Nebula).
 
-This implementation adds [NeoForge](https://neoforged.net/) support to [Nebula](https://github.com/dscalzi/Nebula), 
-but it is somewhat hacky and dirty. This is one of the main reasons why I am not submitting a pull request to merge it into the upstream [Nebula](https://github.com/dscalzi/Nebula).
+## NeoForge support
 
-If you’re interested in bringing [NeoForge](https://neoforged.net/) support to upstream Nebula, feel free to use any part of this code. 
-**Credit is appreciated but not required.**
+The NeoForge resolver is ported from [`BelgianDev/NeoNebula`](https://github.com/BelgianDev/NeoNebula)
+by RaftDev (MIT), with fixes applied on top. Design notes, the porting record and an audit of
+the ported code live in [`sdd/`](sdd/).
 
-This project is not endorsed by the official creators/contributors for 
-[HeliosLauncher](https://github.com/dscalzi/HeliosLauncher) and [Nebula](https://github.com/dscalzi/Nebula).
+> [!WARNING]
+> **Your launcher needs a three-line change, or NeoForge servers will not start.**
 
-Use at your own risk — things may break!
+In `app/assets/js/processbuilder.js`, inside `_resolveServerLibraries()`, replace:
 
-
-> [!WARNING]  
-> This fork requires a change to the launcher.
-
-Replace line 843 in ``app/assets/js/processbuilder.js``:
 ````javascript
 libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
 ````
-Replace it with:
+
+with:
+
 ````javascript
 if (mdl.rawModule.classpath !== false)
   libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
 ````
-This change ensures that the NeoForge ModLoader module is **excluded** from the game’s classpath.
-Including it causes the game to **crash at startup**.
+
+The launcher adds a server's **root** module to the classpath without checking its `classpath`
+flag — it only honours the flag on submodules. NeoForge's universal jar is the root module here,
+and putting it on the classpath duplicates it against the module path, so the game crashes at
+startup. This change makes the root module respect the flag too.
+
+Nothing else is needed: no NeoForge-specific launcher code, and no new `helios-core` version.
+Remember to re-apply it whenever you rebase your launcher on HeliosLauncher upstream. Full
+rationale and verification in [`sdd/06-parche-launcher.md`](sdd/06-parche-launcher.md).
 
 # Nebula
 
