@@ -24,6 +24,11 @@ export interface CreateServerResult {
 
 export class ServerStructure extends BaseModelStructure<Server> {
 
+    // Minimum Minecraft version accepted for NeoForge servers. NeoForge itself goes back to
+    // 1.20.2, so this floor is a deliberate project decision, not a NeoForge limitation --
+    // lower it here if older versions are ever needed.
+    private static readonly MINIMUM_NEOFORGE_MINECRAFT_VERSION = new MinecraftVersion('1.20.4')
+
     private readonly ID_REGEX = /(.+-(.+)$)/
     private readonly SERVER_META_FILE = 'servermeta.json'
 
@@ -239,6 +244,13 @@ export class ServerStructure extends BaseModelStructure<Server> {
                 }
 
                 if(serverMeta.neoforge) {
+                    if(!minecraftVersion.isGreaterThanOrEqualTo(ServerStructure.MINIMUM_NEOFORGE_MINECRAFT_VERSION)) {
+                        throw new Error(
+                            `NeoForge is not supported on Minecraft ${minecraftVersion} (server ${serverMeta.meta.name}). `
+                            + `The minimum supported version is ${ServerStructure.MINIMUM_NEOFORGE_MINECRAFT_VERSION}.`
+                        )
+                    }
+
                     const neoforgeResolver = new NeoForgeResolver(
                         dirname(this.containerDirectory),
                         '',

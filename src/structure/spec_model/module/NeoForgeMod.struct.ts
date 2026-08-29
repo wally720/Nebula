@@ -66,8 +66,11 @@ export class NeoForgeModStructure extends BaseForgeModStructure<ModsToml> {
         const cRes = this.claritasResult?.[path]
 
         if(cRes == null) {
-            this.logger.error(`Claritas failed to yield metadata for NeoForgeMod ${name}!`)
-            this.logger.error('Is this mod malformatted or does Claritas need an update?')
+            // Expected for most NeoForge mods: Claritas only recognizes Forge's
+            // net.minecraftforge.fml.common.Mod annotation, not NeoForge's
+            // net.neoforged.fml.common.Mod, so it yields no group. The module still resolves
+            // correctly using the default group, so this is a warning rather than an error.
+            this.logger.warn(`Claritas yielded no metadata for NeoForgeMod ${name}; falling back to the default group.`)
         }
 
         const claritasId = cRes?.id

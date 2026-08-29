@@ -114,7 +114,7 @@ export class VersionUtil {
             VersionUtil.logger.warn('Attempting to pull latest version instead.')
             version = VersionUtil.findNeoForgePromotedVersion(index, false, minecraftVersion)
             if (version == null) {
-                throw new Error(`No latest version found for Forge ${minecraftVersion}.`)
+                throw new Error(`No latest version found for NeoForge ${minecraftVersion}.`)
             }
         }
 
@@ -122,12 +122,14 @@ export class VersionUtil {
     }
 
     public static findNeoForgePromotedVersion(index: NeoForgeVersionIndex, stable: boolean, workingVersion: MinecraftVersion): string | undefined {
-        // Expects to receive the incoming version index, with the latest version further in the array.
         let latestAvailable: string | undefined
 
         const minecraftMinor = workingVersion.getMinor()
         const minecraftPatch = workingVersion.getRevision() ?? 0
 
+        // The API happens to return versions in ascending order today, but that is not
+        // documented anywhere. Sort by patch number so the last entry is always the newest,
+        // rather than depending on the response's order.
         index.versions.filter(version => {
             const vSplit = version.split('.')
             if (vSplit.length < 2) return false
@@ -135,6 +137,9 @@ export class VersionUtil {
             const neoMajor = parseInt(vSplit[0])
             const neoMinor = parseInt(vSplit[1])
             return neoMajor === minecraftMinor && neoMinor === minecraftPatch
+        }).sort((a, b) => {
+            const patchOf = (v: string): number => parseInt(v.split('.')[2] ?? '0') || 0
+            return patchOf(a) - patchOf(b)
         }).forEach(version => {
             if (stable) {
                 if (!version.endsWith('-beta'))
