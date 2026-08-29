@@ -20,14 +20,19 @@ trabajo está en este repositorio, Nebula**, el generador del `distribution.json
 | [`02-especificacion.md`](02-especificacion.md) | Especificación técnica del resolver de NeoForge. |
 | [`03-plan-implementacion.md`](03-plan-implementacion.md) | Pasos, verificación y puntos abiertos. |
 | [`04-implementacion-existente.md`](04-implementacion-existente.md) | **Ya existe una implementación funcional en otro fork.** Léelo antes de escribir código. |
+| [`05-verificacion.md`](05-verificacion.md) | Resultado de la implementación y las pruebas ejecutadas. |
 | [`evidencia/`](evidencia/) | Artefactos reales extraídos del instalador de NeoForge 21.1.248. |
 
 ## Estado
 
 - [x] Investigación y validación técnica
 - [x] Fork creado
-- [ ] Implementación (portar desde `BelgianDev/NeoNebula`, ver doc 04)
-- [ ] Pruebas de punta a punta
+- [x] Implementación (9 commits portados desde `BelgianDev/NeoNebula` + 5 correcciones)
+- [x] Pruebas de generación de punta a punta (`generate distro` con NeoForge 21.1.248)
+- [ ] Prueba de carga de mods in-game — **pendiente, requiere el launcher**
+
+Ver [`05-verificacion.md`](05-verificacion.md) para el resultado de las pruebas y lo que
+queda sin verificar.
 
 ## Metodología
 
