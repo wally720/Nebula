@@ -133,6 +133,13 @@ espejo de `latest-forge` (línea 386); `recommended-neoforge` no aplica.
 **La advertencia de Forge 1.20.3+ se conserva**: sigue siendo cierta para Forge.
 
 ### `src/util/VersionUtil.ts`
+
+> **OBSOLETO.** Lo que sigue quedó superado por la implementación de `BelgianDev/NeoNebula`,
+> que baja el listado completo de versiones y filtra en cliente comparando enteros — evitando
+> de raíz la trampa del prefijo descrita abajo. Usar ese enfoque. Ver
+> `04-implementacion-existente.md`. Se conserva este texto porque documenta la trampa, que
+> sigue siendo cierta para cualquiera que use la API `?filter=`.
+
 `getPromotedNeoForgeVersion(minecraftVersion, promotion)`, para que `--neoforge latest`
 funcione como `--forge latest`:
 

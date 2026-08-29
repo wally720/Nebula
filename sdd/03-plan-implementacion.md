@@ -5,24 +5,32 @@
 Fork de `dscalzi/Nebula` a `wally720/Nebula`. Rama de trabajo sugerida:
 `claude/neoforge-support`.
 
-## Paso 1 — Resolver
+## Paso 1 — Portar NeoNebula (no reimplementar)
 
-`src/resolver/neoforge/NeoForge.resolver.ts`, según `02-especificacion.md` §1.
+`BelgianDev/NeoNebula` ya tiene el resolver completo y funcional. Ver
+[`04-implementacion-existente.md`](04-implementacion-existente.md) para el análisis completo.
 
-Orden recomendado, para poder verificar cada pieza por separado:
+```bash
+git remote add neonebula https://github.com/BelgianDev/NeoNebula.git
+git fetch neonebula
+git cherry-pick 47d2dc2..552eb99      # los 9 commits de NeoForge
+```
 
-1. Clase base + `isForVersion` (MC 21) + descarga del instalador desde
-   `maven.neoforged.net/releases`.
-2. `executeInstaller` con `--install-client` (§1.3). **Verificable ya:** debe completar sin
-   intervención.
-3. `getNeoFormVersion` y el comodín (§1.2).
-4. `generatedFiles` (§1.1) y `processForgeModule`.
-5. `processLibraries` (solo renombrar etiquetas).
+Conflictos esperables en `src/index.ts` y `package.json`, por los dos commits de mantenimiento
+que el upstream tiene y NeoNebula no. Son menores.
 
-## Paso 2 — Plomería
+`02-especificacion.md` sigue siendo útil como mapa de qué hace cada pieza y por qué, con una
+excepción: su §2 sobre la resolución de `latest` quedó **obsoleta**; el enfoque de NeoNebula
+(filtrado numérico en cliente) es mejor y es el que se conserva.
 
-Según `02-especificacion.md` §2: `VersionRepo.struct`, `Repo.struct`,
-`NeoForgeMod.struct`, `VersionSegmentedRegistry`, `ServerMeta`, `index.ts`, `VersionUtil`.
+## Paso 2 — Corregir tres defectos del port
+
+Detallados en `04-implementacion-existente.md`:
+
+1. **Respaldo a `mods.toml` legado** en `NeoForgeMod.struct.ts:41` — el de mayor impacto real,
+   afecta a mods de 1.21.1 que aún no migraron a `neoforge.mods.toml`.
+2. **`runInstaller` debe rechazar** ante código de salida distinto de cero.
+3. **`javaOptions.suggestedMajor: 21`** en el `servermeta.json` del servidor.
 
 ## Paso 3 — Launcher
 
